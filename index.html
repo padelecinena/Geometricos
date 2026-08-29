@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Geométricos B10/B05</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F6F9; --paper-2:#E7EBF1; --ink:#152238; --steel:#0B1A38; --steel-2:#132A52;
+    --accent:#0057B8; --accent-dark:#00408A;
+    --abierto:#B23A2E; --proceso:#C8890A; --cerrado:#2E7D46;
+    --line: rgba(21,34,56,0.14); --shadow: 0 2px 10px rgba(0,0,0,0.12);
+    --navy-dark:#0B1A38; --navy-mid:#2A4A82; --blue-lt:#EAF0FB;
+    --teal-dark:#1F5C52; --teal-mid:#3E8F80; --teal-lt:#E9F5F2;
+  }
+  *{box-sizing:border-box;}
+  body{ margin:0; font-family:'Inter',system-ui,sans-serif; background:var(--paper); color:var(--ink); min-height:100vh; }
+  h1,h2,h3,.display{ font-family:'Oswald',sans-serif; text-transform:uppercase; letter-spacing:0.03em; }
+  .screen{ display:none; min-height:100vh; flex-direction:column; }
+  .screen.active{ display:flex; }
+
+  #login{ align-items:center; justify-content:center; background:var(--steel); }
+  .login-card{ background:var(--paper); padding:36px 28px; border-radius:4px; width:min(90vw,340px); box-shadow:var(--shadow); border-top:6px solid var(--accent); }
+  .login-card h1{ font-size:22px; margin:0 0 4px; color:var(--steel);}
+  .login-card p{ margin:0 0 20px; font-size:13px; color:#5b6472;}
+  .login-card input{ width:100%; padding:12px; margin-bottom:12px; border:1px solid var(--line); border-radius:3px; font-size:15px; font-family:'Inter';}
+  .login-card button{ width:100%; padding:13px; }
+  #loginError{ color:var(--abierto); font-size:13px; min-height:18px; margin-top:2px;}
+
+  header.topbar{ background:var(--steel); color:#fff; padding:14px 16px; display:flex; align-items:center; gap:12px; box-shadow:var(--shadow); position:sticky; top:0; z-index:10; }
+  header.topbar .back{ background:none; border:none; color:#fff; font-size:20px; cursor:pointer; padding:4px 8px; }
+  header.topbar h2{ margin:0; font-size:17px; flex:1; color:#fff;}
+  header.topbar .tag{ background:var(--accent); font-family:'Inter'; text-transform:none; letter-spacing:0; font-size:12px; font-weight:600; padding:4px 10px; border-radius:20px;}
+  header.topbar .iconbtn{ background:none; border:1px solid rgba(255,255,255,0.35); color:#fff; font-size:13px; padding:6px 10px; border-radius:3px; cursor:pointer; font-family:'Inter'; font-weight:600;}
+
+  main{ flex:1; padding:20px 16px 40px; max-width:720px; margin:0 auto; width:100%; }
+
+  button, .btn{ background:var(--accent); color:#fff; border:none; border-radius:3px; font-family:'Inter'; font-weight:600; font-size:14px; cursor:pointer; transition:background .15s ease; }
+  button:hover, .btn:hover{ background:var(--accent-dark); }
+  button.secondary{ background:var(--steel-2); }
+  button.ghost{ background:transparent; color:var(--steel); border:1px solid var(--line); }
+  button.danger{ background:#fff; color:var(--abierto); border:1.5px solid var(--abierto); }
+  button.danger:hover{ background:var(--abierto); color:#fff; }
+  button:disabled{ opacity:.6; cursor:default; }
+
+  .model-grid{ display:grid; gap:16px; grid-template-columns:1fr 1fr; margin-top:24px;}
+  .model-card{ background:var(--paper-2); border:1px solid var(--line); border-radius:4px; padding:36px 12px; text-align:center; cursor:pointer; font-family:'Oswald'; font-size:30px; font-weight:700; color:var(--steel); box-shadow:var(--shadow); position:relative; overflow:hidden; }
+  .model-card:hover{ border-color:var(--accent); }
+  .model-card::before{ content:''; position:absolute; top:0; left:0; width:6px; height:100%; background:var(--accent); }
+  .model-card span{ display:block; font-family:'Inter'; text-transform:none; font-size:12px; font-weight:500; color:#5b6472; margin-top:6px; letter-spacing:0;}
+
+  .action-grid{ display:flex; flex-direction:column; gap:14px; margin-top:24px; }
+  .action-card{ background:var(--paper-2); border:1px solid var(--line); border-radius:4px; padding:22px 20px; display:flex; align-items:center; gap:16px; cursor:pointer; box-shadow:var(--shadow); }
+  .action-card .icon{ font-size:28px; }
+  .action-card .txt strong{ display:block; font-family:'Oswald'; font-size:17px; color:var(--steel);}
+  .action-card .txt span{ font-size:12.5px; color:#5b6472;}
+
+  .top-toolbar{ display:flex; gap:8px; margin-bottom:16px; }
+  .top-toolbar button{ flex:1; padding:10px 6px; font-size:12.5px; border-radius:4px; display:flex; flex-direction:column; align-items:center; gap:2px; background:#fff; color:var(--steel); border:1px solid var(--line); box-shadow:none; font-weight:600; }
+  .top-toolbar button .icon{ font-size:17px; }
+  .top-toolbar button.primary{ background:var(--accent); color:#fff; border-color:var(--accent); }
+
+  .counters{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-bottom:20px;}
+  .counter{ background:#fff; border:1px solid var(--line); border-radius:4px; padding:14px 8px; text-align:center;}
+  .counter .num{ font-family:'Oswald'; font-size:26px; font-weight:700;}
+  .counter .lbl{ font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:#5b6472; margin-top:2px;}
+  .counter.abierto .num{ color:var(--abierto);}
+  .counter.proceso .num{ color:var(--proceso);}
+  .counter.cerrado .num{ color:var(--cerrado);}
+
+  .toolbar{ display:flex; gap:8px; margin-bottom:14px; }
+  .toolbar button{ flex:1; padding:10px; font-size:13px; }
+
+  .filters{ display:flex; gap:8px; margin-bottom:14px; overflow-x:auto; padding-bottom:2px;}
+  .filters select{ padding:8px 10px; border:1px solid var(--line); border-radius:3px; font-size:13px; background:#fff; flex-shrink:0; }
+  .defect-row{ background:#fff; border:1px solid var(--line); border-left:5px solid var(--abierto); border-radius:3px; padding:12px 14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; gap:10px;}
+  .defect-row.st-proceso{ border-left-color:var(--proceso); }
+  .defect-row.st-cerrado{ border-left-color:var(--cerrado); }
+  .defect-row .info{ cursor:pointer; flex:1; }
+  .defect-row .info strong{ font-size:14.5px; display:block; }
+  .defect-row .info span{ font-size:12px; color:#5b6472; }
+  .defect-row .rowright{ display:flex; align-items:center; gap:8px; }
+  .trash-btn{ background:none; border:none; font-size:17px; cursor:pointer; padding:4px; color:#8a8f98;}
+  .trash-btn:hover{ color:var(--abierto); }
+  .sello{ font-family:'Oswald'; font-size:10.5px; font-weight:700; text-transform:uppercase; padding:4px 9px; border-radius:2px; border:2px solid; letter-spacing:.04em; white-space:nowrap; transform:rotate(-3deg);}
+  .sello.abierto{ color:var(--abierto); border-color:var(--abierto); }
+  .sello.proceso{ color:var(--proceso); border-color:var(--proceso); }
+  .sello.cerrado{ color:var(--cerrado); border-color:var(--cerrado); }
+  .empty{ text-align:center; color:#5b6472; padding:40px 10px; font-size:14px; }
+
+  .block{ background:#fff; border:1px solid var(--line); border-radius:4px; padding:18px; margin-bottom:16px; }
+  .block h3{ font-size:14px; margin:0 0 14px; color:var(--accent); border-bottom:2px solid var(--paper-2); padding-bottom:8px;}
+  .field{ margin-bottom:14px; }
+  .field label{ display:block; font-size:12px; font-weight:600; color:#5b6472; margin-bottom:5px; text-transform:uppercase; letter-spacing:.03em;}
+  .field input, .field select, .field textarea{ width:100%; padding:11px; border:1px solid var(--line); border-radius:3px; font-size:14.5px; font-family:'Inter'; background:#fdfcfa;}
+  .field textarea{ resize:vertical; min-height:70px; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .check-row{ display:flex; gap:20px; }
+  .check-row label{ display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:500; text-transform:none; }
+  .check-row input{ width:auto; }
+  .imgprev{ margin-top:10px; max-width:100%; border-radius:4px; border:1px solid var(--line); display:none; }
+  .submit-bar{ position:sticky; bottom:0; background:var(--paper); padding:14px 0 4px; }
+  .submit-bar button{ width:100%; padding:15px; font-size:15px; }
+  .msg{ text-align:center; font-size:13px; margin-top:8px; min-height:16px; }
+  .msg.ok{ color:var(--cerrado); }
+  .msg.err{ color:var(--abierto); }
+  .progressbar{ height:6px; background:var(--paper-2); border-radius:3px; overflow:hidden; margin-top:10px; display:none; }
+  .progressbar .fill{ height:100%; background:var(--accent); width:0%; transition:width .25s ease; }
+
+  /* FICHA estilo Excel */
+  .ficha-title{ background:var(--navy-dark); color:#fff; padding:14px 16px; border-radius:4px; margin-bottom:16px; font-family:'Oswald'; font-size:15px; display:flex; gap:10px; align-items:center;}
+  .exblock{ border:1px solid var(--line); border-radius:4px; overflow:hidden; margin-bottom:16px; }
+  .exrow{ display:flex; border-bottom:1px solid rgba(255,255,255,0.25); }
+  .exrow:last-child{ border-bottom:none; }
+  .exrow .lbl{ flex:0 0 42%; padding:11px 12px; color:#fff; font-family:'Oswald'; font-size:11.5px; font-weight:600; letter-spacing:.03em; }
+  .exrow .val{ flex:1; padding:11px 12px; font-size:14px; }
+  .exrow .val input, .exrow .val select, .exrow .val textarea{ width:100%; border:1px solid var(--line); border-radius:3px; padding:8px; font-family:'Inter'; font-size:13.5px; background:#fff; }
+  .exblock.info .exrow:nth-child(odd) .lbl{ background:var(--navy-dark); }
+  .exblock.info .exrow:nth-child(even) .lbl{ background:var(--navy-mid); }
+  .exblock.info .exrow:nth-child(odd) .val{ background:#fff; }
+  .exblock.info .exrow:nth-child(even) .val{ background:var(--blue-lt); }
+  .exblock.plan .exrow:nth-child(odd) .lbl{ background:var(--teal-dark); }
+  .exblock.plan .exrow:nth-child(even) .lbl{ background:var(--teal-mid); }
+  .exblock.plan .exrow:nth-child(odd) .val{ background:#fff; }
+  .exblock.plan .exrow:nth-child(even) .val{ background:var(--teal-lt); }
+  .img-cell img{ max-width:100%; border-radius:3px; }
+  .action-gallery{ display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; }
+  .thumb-wrap{ position:relative; width:70px; height:70px; }
+  .thumb-wrap img{ width:100%; height:100%; object-fit:cover; border-radius:4px; border:1px solid var(--line); }
+  .thumb-x{ position:absolute; top:-6px; right:-6px; width:20px; height:20px; border-radius:50%; background:var(--abierto); color:#fff; border:none; font-size:11px; line-height:1; cursor:pointer; padding:0; }
+  .ficha-actions{ display:flex; gap:8px; margin-top:6px; flex-wrap:wrap; }
+  .ficha-actions button{ flex:1 1 30%; padding:13px 8px; font-size:13px; }
+
+  /* MODAL IMPRIMIR */
+  .modal-overlay{ position:fixed; inset:0; background:rgba(0,0,0,0.5); display:none; align-items:center; justify-content:center; z-index:50; padding:16px;}
+  .modal-overlay.active{ display:flex; }
+  .modal-card{ background:#fff; border-radius:6px; padding:22px; width:min(92vw,380px); }
+  .modal-card h3{ margin:0 0 14px; font-size:16px; color:var(--steel);}
+  .modal-card .field{ margin-bottom:12px; }
+  .modal-actions{ display:flex; gap:10px; margin-top:8px; }
+  .modal-actions button{ flex:1; padding:11px; }
+
+  /* ESTADISTICAS */
+  .stat-block{ background:#fff; border:1px solid var(--line); border-radius:4px; padding:16px; margin-bottom:14px; }
+  .stat-block h3{ font-size:13px; color:var(--accent); margin:0 0 12px; text-transform:uppercase; letter-spacing:.03em;}
+  .bar-row{ margin-bottom:10px; }
+  .bar-row .bar-lbl{ display:flex; justify-content:space-between; font-size:12.5px; margin-bottom:4px; color:var(--ink); }
+  .bar-track{ height:10px; background:var(--paper-2); border-radius:5px; overflow:hidden; }
+  .bar-fill{ height:100%; background:var(--accent); border-radius:5px; }
+  .stat-nums{ display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+
+  #printArea{ display:none; }
+  @media print{
+    body *{ visibility:hidden; }
+    #printArea, #printArea *{ visibility:visible; }
+    #printArea{ display:block; position:absolute; top:0; left:0; width:100%; padding:20px; }
+    .print-card{ page-break-inside:avoid; border:1px solid #999; border-radius:4px; padding:14px; margin-bottom:16px; }
+    .print-card h4{ margin:0 0 8px; font-size:15px; }
+    .print-card table{ width:100%; border-collapse:collapse; font-size:12px; }
+    .print-card td{ padding:4px 6px; border:1px solid #ccc; }
+    .print-card img{ max-width:220px; margin-top:8px; }
+  }
+
+  @media(max-width:400px){ .row2{ grid-template-columns:1fr; } .exrow .lbl{ flex:0 0 46%; } }
+</style>
+</head>
+<body>
+
+<section id="login" class="screen active">
+  <div class="login-card">
+    <h1>Geométricos B10 · B05</h1>
+    <p>Acceso restringido — en construcción</p>
+    <input id="loginUser" placeholder="Usuario" autocomplete="off">
+    <input id="loginPin" placeholder="PIN" type="password" inputmode="numeric" autocomplete="off">
+    <button onclick="doLogin()">Entrar</button>
+    <div id="loginError"></div>
+  </div>
+</section>
+
+<section id="modelo" class="screen">
+  <header class="topbar"><h2>Geométricos</h2><span class="tag" id="verTag">v1.8</span></header>
+  <main>
+    <p style="color:#5b6472;font-size:13.5px;">Selecciona el modelo para continuar</p>
+    <div class="model-grid">
+      <div class="model-card" onclick="selectModel('B10')">B10<span>Ver defectos</span></div>
+      <div class="model-card" onclick="selectModel('B05')">B05<span>Ver defectos</span></div>
+    </div>
+  </main>
+</section>
+
+<section id="lista" class="screen">
+  <header class="topbar"><button class="back" onclick="showScreen('modelo')">←</button><h2 id="listaTitle">Registro B10</h2></header>
+  <main>
+    <div class="top-toolbar">
+      <button onclick="openForm()"><span class="icon">➕</span>Añadir</button>
+      <button onclick="openEstadisticas()"><span class="icon">📊</span>Estadísticas</button>
+      <button class="primary" onclick="openPrintModal()"><span class="icon">🖨️</span>Imprimir</button>
+    </div>
+    <div class="counters">
+      <div class="counter abierto"><div class="num" id="cntAbierto">0</div><div class="lbl">Abierto</div></div>
+      <div class="counter proceso"><div class="num" id="cntProceso">0</div><div class="lbl">En proceso</div></div>
+      <div class="counter cerrado"><div class="num" id="cntCerrado">0</div><div class="lbl">Cerrado</div></div>
+    </div>
+    <div class="filters">
+      <select id="filtroZona" onchange="renderLista()"><option value="">Todas las zonas</option></select>
+      <select id="filtroOwner" onchange="renderLista()"><option value="">Todos los responsables</option></select>
+      <select id="filtroStatus" onchange="renderLista()">
+        <option value="">Todos los estados</option>
+        <option value="Abierto">Abierto</option>
+        <option value="En proceso">En proceso</option>
+        <option value="Cerrado">Cerrado</option>
+      </select>
+    </div>
+    <div id="listaContainer"></div>
+  </main>
+</section>
+
+<section id="ficha" class="screen">
+  <header class="topbar"><button class="back" onclick="showScreen('lista')">←</button><h2 id="fichaTitle">Ficha</h2></header>
+  <main id="fichaContainer"></main>
+</section>
+
+<section id="estadisticas" class="screen">
+  <header class="topbar"><button class="back" onclick="showScreen('lista')">←</button><h2>Estadísticas</h2></header>
+  <main id="statsContainer"><p class="empty">Cargando...</p></main>
+</section>
+
+<section id="form" class="screen">
+  <header class="topbar"><button class="back" onclick="showScreen('lista')">←</button><h2>Añadir defecto</h2></header>
+  <main>
+    <div class="block">
+      <h3>Información del defecto</h3>
+      <div class="row2">
+        <div class="field"><label>Contramarca</label><input id="f_contramarca" placeholder="Ej. CM-1234"></div>
+        <div class="field"><label>Fase</label><input id="f_fase" placeholder="Ej. BIW / F1 / F2"></div>
+      </div>
+      <div class="row2">
+        <div class="field"><label>Fecha inicio</label><input id="f_fecha" type="date"></div>
+        <div class="field"><label>Zona</label><input id="f_zona" placeholder="Ej. Lateral izquierdo"></div>
+      </div>
+      <div class="field"><label>Defecto</label><input id="f_defecto" placeholder="Tipo de defecto"></div>
+      <div class="field"><label>Descripción</label><textarea id="f_descripcion" placeholder="Describe el defecto..."></textarea></div>
+      <div class="field"><label>Owner</label><input id="f_owner" placeholder="Responsable de detección"></div>
+      <div class="field">
+        <label>Imagen</label>
+        <input id="f_imagen" type="file" accept="image/*" onchange="previewImg(event)">
+        <img id="imgPreview" class="imgprev">
+      </div>
+    </div>
+
+    <div class="block">
+      <h3>Plan de acción</h3>
+      <div class="check-row" style="margin-bottom:14px;">
+        <label><input type="checkbox" id="f_recurrente"> Recurrente</label>
+        <label><input type="checkbox" id="f_nuevo" checked> Nuevo</label>
+      </div>
+      <div class="field"><label>Acción tomada</label><textarea id="f_accion" placeholder="Acción prevista o tomada..."></textarea></div>
+      <div class="row2">
+        <div class="field"><label>Responsable</label><input id="f_responsable" placeholder="Nombre"></div>
+        <div class="field"><label>Fecha prevista OK</label><input id="f_fechaprev" type="date"></div>
+      </div>
+      <div class="field">
+        <label>Status</label>
+        <select id="f_status">
+          <option value="Abierto">1 · Abierto</option>
+          <option value="En proceso">2/3 · En proceso</option>
+          <option value="Cerrado">4 · Cerrado</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="submit-bar">
+      <button onclick="submitDefect()" id="submitBtn">Guardar defecto</button>
+      <div class="progressbar" id="progBar"><div class="fill" id="progFill"></div></div>
+      <div class="msg" id="formMsg"></div>
+    </div>
+  </main>
+</section>
+
+<div class="modal-overlay" id="printModal">
+  <div class="modal-card">
+    <h3>Imprimir defectos</h3>
+    <div class="field">
+      <label>Filtrar por</label>
+      <select id="printField" onchange="populatePrintValues()">
+        <option value="Todos">Todos los defectos</option>
+        <option value="zona">Zona</option>
+        <option value="owner">Owner</option>
+        <option value="responsable">Responsable</option>
+        <option value="status">Status</option>
+      </select>
+    </div>
+    <div class="field" id="printValueWrap" style="display:none;">
+      <label>Valor</label>
+      <select id="printValue"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="ghost" onclick="closePrintModal()">Cancelar</button>
+      <button onclick="generatePrint()">Imprimir</button>
+    </div>
+  </div>
+</div>
+
+<div id="printArea"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, orderBy, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyDocLEPP8DWaTvYVyvIEDU2gzd8umwt05E",
+  authDomain: "calidad-bodyshop.firebaseapp.com",
+  projectId: "calidad-bodyshop",
+  storageBucket: "calidad-bodyshop.firebasestorage.app",
+  messagingSenderId: "537300411404",
+  appId: "1:537300411404:web:eaca51425471bfeeab7a29"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const APP_VERSION = '1.8';
+console.log('Geométricos B10/B05 · versión', APP_VERSION);
+
+let currentModel = 'B10';
+let defects = [];
+let currentDefectId = null;
+let pendingImageFile = null;
+
+function collFor(model){ return collection(db, model === 'B10' ? 'geometricos_b10' : 'geometricos_b05'); }
+function docFor(model, id){ return doc(db, model === 'B10' ? 'geometricos_b10' : 'geometricos_b05', id); }
+
+window.showScreen = function(id){
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+};
+
+window.doLogin = function(){
+  const u = document.getElementById('loginUser').value.trim();
+  const p = document.getElementById('loginPin').value.trim();
+  if(u === 'Eduardo' && p === '0109'){
+    sessionStorage.setItem('geo_auth','1');
+    showScreen('modelo');
+  } else {
+    document.getElementById('loginError').textContent = 'Usuario o PIN incorrectos';
+  }
+};
+if(sessionStorage.getItem('geo_auth') === '1'){ showScreen('modelo'); }
+
+window.selectModel = function(model){
+  currentModel = model;
+  openLista();
+};
+
+window.openLista = async function(){
+  document.getElementById('listaTitle').textContent = 'Registro ' + currentModel;
+  showScreen('lista');
+  await loadDefects();
+};
+
+window.openForm = function(){ resetForm(); showScreen('form'); };
+
+// ---------- DATA ----------
+async function loadDefects(){
+  document.getElementById('listaContainer').innerHTML = '<p class="empty">Cargando...</p>';
+  const q = query(collFor(currentModel), orderBy('createdAt','desc'));
+  const snap = await getDocs(q);
+  defects = [];
+  snap.forEach(d => defects.push({ id:d.id, ...d.data() }));
+  populateFilters();
+  renderLista();
+}
+
+function populateFilters(){
+  const zonaSel = document.getElementById('filtroZona');
+  const zonas = [...new Set(defects.map(d => d.zona).filter(Boolean))];
+  zonaSel.innerHTML = '<option value="">Todas las zonas</option>' + zonas.map(z => `<option value="${z}">${z}</option>`).join('');
+  const ownerSel = document.getElementById('filtroOwner');
+  const owners = [...new Set(defects.map(d => d.owner).filter(Boolean))];
+  ownerSel.innerHTML = '<option value="">Todos los responsables</option>' + owners.map(o => `<option value="${o}">${o}</option>`).join('');
+}
+
+window.renderLista = function(){
+  const zona = document.getElementById('filtroZona').value;
+  const owner = document.getElementById('filtroOwner').value;
+  const status = document.getElementById('filtroStatus').value;
+  const filtered = defects.filter(d => (!zona || d.zona === zona) && (!owner || d.owner === owner) && (!status || d.status === status));
+
+  document.getElementById('cntAbierto').textContent = defects.filter(d => d.status === 'Abierto').length;
+  document.getElementById('cntProceso').textContent = defects.filter(d => d.status === 'En proceso').length;
+  document.getElementById('cntCerrado').textContent = defects.filter(d => d.status === 'Cerrado').length;
+
+  const cont = document.getElementById('listaContainer');
+  if(filtered.length === 0){ cont.innerHTML = '<p class="empty">Sin defectos registrados todavía.</p>'; return; }
+
+  const stClass = s => s === 'Abierto' ? 'abierto' : s === 'En proceso' ? 'proceso' : 'cerrado';
+  cont.innerHTML = filtered.map(d => `
+    <div class="defect-row st-${stClass(d.status)}">
+      <div class="info" onclick="openFicha('${d.id}')">
+        <strong>${d.defecto || '(sin tipo)'} · ${d.zona || ''}</strong>
+        <span>${d.contramarca || ''} · ${d.fase || ''} · ${d.fechaInicio || ''}</span>
+      </div>
+      <div class="rowright">
+        <span class="sello ${stClass(d.status)}">${d.status}</span>
+        <button class="trash-btn" onclick="deleteDefect('${d.id}', event)" title="Eliminar">🗑️</button>
+      </div>
+    </div>
+  `).join('');
+};
+
+window.deleteDefect = async function(id, evt){
+  if(evt) evt.stopPropagation();
+  const d = defects.find(x => x.id === id);
+  const ok = confirm(`¿Eliminar el defecto "${d ? d.defecto : ''}"? Esta acción no se puede deshacer.`);
+  if(!ok) return;
+  try{
+    await deleteDoc(docFor(currentModel, id));
+    await loadDefects();
+  } catch(err){
+    alert('No se pudo eliminar: ' + err.message);
+  }
+};
+
+window.openFicha = function(id){
+  currentDefectId = id;
+  const d = defects.find(x => x.id === id);
+  currentActionImages = Array.isArray(d.imagenesAccion) ? [...d.imagenesAccion] : [];
+  document.getElementById('fichaTitle').textContent = currentModel;
+  document.getElementById('fichaContainer').innerHTML = `
+    <div class="ficha-actions">
+      <button onclick="saveFicha()">Guardar cambios</button>
+      <button class="ghost" onclick="printSingleDefect('${d.id}')">🖨️ Imprimir</button>
+      <button class="danger" onclick="deleteDefect('${d.id}')">Eliminar defecto</button>
+    </div>
+    <div class="msg" id="fichaMsg"></div>
+    <div class="ficha-title">🔍 FICHA DE DEFECTO — ${d.defecto || ''}</div>
+    <div class="exblock info">
+      <div class="exrow"><div class="lbl">CTM</div><div class="val">${d.contramarca||''}</div></div>
+      <div class="exrow"><div class="lbl">FASE</div><div class="val">${d.fase||''}</div></div>
+      <div class="exrow"><div class="lbl">FECHA</div><div class="val">${d.fechaInicio||''}</div></div>
+      <div class="exrow"><div class="lbl">ZONA</div><div class="val">${d.zona||''}</div></div>
+      <div class="exrow"><div class="lbl">DEFECTO</div><div class="val">${d.defecto||''}</div></div>
+      <div class="exrow"><div class="lbl">DESCRIPCIÓN</div><div class="val">${d.descripcion||''}</div></div>
+      <div class="exrow"><div class="lbl">OWNER</div><div class="val">${d.owner||''}</div></div>
+      <div class="exrow"><div class="lbl">IMAGEN</div><div class="val img-cell">${d.imagenURL ? `<img src="${d.imagenURL}">` : 'Sin imagen'}</div></div>
+    </div>
+    <div class="exblock plan">
+      <div class="exrow"><div class="lbl">RECURRENTE</div><div class="val">${d.recurrente?'Sí':'No'}</div></div>
+      <div class="exrow"><div class="lbl">NUEVO</div><div class="val">${d.nuevo?'Sí':'No'}</div></div>
+      <div class="exrow"><div class="lbl">ACCIÓN TOMADA</div><div class="val"><textarea id="e_accion">${d.accionTomada||''}</textarea></div></div>
+      <div class="exrow"><div class="lbl">RESPONSABLE</div><div class="val"><input id="e_responsable" value="${d.responsable||''}"></div></div>
+      <div class="exrow"><div class="lbl">FECHA PREV. OK</div><div class="val"><input id="e_fechaprev" type="date" value="${d.fechaPrevOK||''}"></div></div>
+      <div class="exrow"><div class="lbl">STATUS (1-4)</div><div class="val">
+        <select id="e_status">
+          <option value="Abierto" ${d.status==='Abierto'?'selected':''}>1 · Abierto</option>
+          <option value="En proceso" ${d.status==='En proceso'?'selected':''}>2/3 · En proceso</option>
+          <option value="Cerrado" ${d.status==='Cerrado'?'selected':''}>4 · Cerrado</option>
+        </select>
+      </div></div>
+      <div class="exrow"><div class="lbl">FOTOS EVIDENCIA</div><div class="val">
+        <input type="file" accept="image/*" multiple id="e_accion_img" onchange="addActionImages(event)">
+        <div id="actionImgGallery" class="action-gallery"></div>
+      </div></div>
+    </div>
+  `;
+  renderActionGallery();
+  showScreen('ficha');
+};
+
+let currentActionImages = [];
+const MAX_ACTION_IMAGE_BYTES = 200 * 1024;
+const MAX_ACTION_IMAGE_DIM = 900;
+
+function renderActionGallery(){
+  const gal = document.getElementById('actionImgGallery');
+  if(!gal) return;
+  if(currentActionImages.length === 0){ gal.innerHTML = '<p style="font-size:12px;color:#5b6472;margin:6px 0 0;">Sin fotos añadidas.</p>'; return; }
+  gal.innerHTML = currentActionImages.map((src, i) => `
+    <div class="thumb-wrap">
+      <img src="${src}">
+      <button type="button" class="thumb-x" onclick="removeActionImage(${i})">✕</button>
+    </div>
+  `).join('');
+}
+
+window.addActionImages = async function(e){
+  const files = Array.from(e.target.files || []);
+  const msg = document.getElementById('fichaMsg');
+  for(const file of files){
+    try{
+      const compressed = await compressImage(file, MAX_ACTION_IMAGE_BYTES, MAX_ACTION_IMAGE_DIM);
+      const base64 = await fileToBase64(compressed);
+      currentActionImages.push(base64);
+    } catch(err){
+      msg.className = 'msg err'; msg.textContent = 'No se pudo procesar una imagen: ' + err.message;
+    }
+  }
+  renderActionGallery();
+  e.target.value = '';
+};
+
+window.removeActionImage = function(i){
+  currentActionImages.splice(i, 1);
+  renderActionGallery();
+};
+
+window.saveFicha = async function(){
+  const msg = document.getElementById('fichaMsg');
+  const approxSize = JSON.stringify(currentActionImages).length + 20000;
+  if(approxSize > 900000){
+    msg.className = 'msg err';
+    msg.textContent = 'Demasiadas fotos para guardar en un solo documento — quita alguna e inténtalo de nuevo.';
+    return;
+  }
+  try{
+    await updateDoc(docFor(currentModel, currentDefectId), {
+      accionTomada: document.getElementById('e_accion').value,
+      responsable: document.getElementById('e_responsable').value,
+      fechaPrevOK: document.getElementById('e_fechaprev').value,
+      status: document.getElementById('e_status').value,
+      imagenesAccion: currentActionImages,
+      updatedAt: serverTimestamp()
+    });
+    msg.className = 'msg ok'; msg.textContent = 'Guardado correctamente';
+    setTimeout(() => openLista(), 700);
+  } catch(err){
+    msg.className = 'msg err'; msg.textContent = 'Error al guardar: ' + err.message;
+  }
+};
+
+// ---------- IMAGEN ----------
+const MAX_IMAGE_BYTES = 320 * 1024;
+const MAX_IMAGE_DIM = 1200;
+
+function compressImage(file, maxBytes, maxDim){
+  maxBytes = maxBytes || MAX_IMAGE_BYTES;
+  maxDim = maxDim || MAX_IMAGE_DIM;
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width, height } = img;
+      if(width > height && width > maxDim){ height = Math.round(height * maxDim / width); width = maxDim; }
+      else if(height > maxDim){ width = Math.round(width * maxDim / height); height = maxDim; }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      let quality = 0.82;
+      const tryEncode = () => {
+        canvas.toBlob(blob => {
+          if(!blob){ reject(new Error('No se pudo procesar la imagen')); return; }
+          if(blob.size > maxBytes && quality > 0.35){ quality -= 0.12; tryEncode(); }
+          else { resolve(new File([blob], (file.name || 'foto').replace(/\.[^.]+$/, '') + '.jpg', { type:'image/jpeg' })); }
+        }, 'image/jpeg', quality);
+      };
+      tryEncode();
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('Imagen no válida')); };
+    img.src = url;
+  });
+}
+
+function fileToBase64(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = () => reject(new Error('No se pudo leer la imagen'));
+    reader.readAsDataURL(file);
+  });
+}
+
+window.previewImg = async function(e){
+  const file = e.target.files[0];
+  const prev = document.getElementById('imgPreview');
+  const msg = document.getElementById('formMsg');
+  if(!file){ pendingImageFile = null; prev.style.display = 'none'; return; }
+  msg.className = 'msg'; msg.textContent = 'Procesando imagen...';
+  try{
+    const compressed = await compressImage(file);
+    pendingImageFile = compressed;
+    prev.src = URL.createObjectURL(compressed);
+    prev.style.display = 'block';
+    msg.textContent = `Imagen lista (${(compressed.size/1024).toFixed(0)} KB)`;
+  } catch(err){
+    msg.className = 'msg err'; msg.textContent = 'No se pudo procesar la imagen: ' + err.message;
+    pendingImageFile = null; prev.style.display = 'none';
+  }
+};
+
+function setProgress(pct, text){
+  const bar = document.getElementById('progBar');
+  bar.style.display = 'block';
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('formMsg').textContent = text ? `${text} ${pct}%` : pct + '%';
+}
+
+function resetForm(){
+  ['f_contramarca','f_fase','f_fecha','f_zona','f_defecto','f_descripcion','f_owner','f_accion','f_responsable','f_fechaprev']
+    .forEach(id => document.getElementById(id).value = '');
+  document.getElementById('f_recurrente').checked = false;
+  document.getElementById('f_nuevo').checked = true;
+  document.getElementById('f_status').value = 'Abierto';
+  document.getElementById('imgPreview').style.display = 'none';
+  document.getElementById('f_imagen').value = '';
+  pendingImageFile = null;
+  document.getElementById('formMsg').textContent = '';
+  document.getElementById('progBar').style.display = 'none';
+  document.getElementById('progFill').style.width = '0%';
+}
+
+window.submitDefect = async function(){
+  const msg = document.getElementById('formMsg');
+  const btn = document.getElementById('submitBtn');
+  const defecto = document.getElementById('f_defecto').value.trim();
+  if(!defecto){ msg.className='msg err'; msg.textContent='Indica al menos el tipo de defecto.'; return; }
+
+  btn.disabled = true; msg.className='msg';
+  setProgress(10, 'Iniciando');
+
+  const withTimeout = (promise, ms, label) => Promise.race([
+    promise, new Promise((_, rej) => setTimeout(() => rej(new Error(`Tiempo agotado (${label})`)), ms))
+  ]);
+
+  try{
+    let imagenURL = null;
+    if(pendingImageFile){
+      setProgress(35, 'Procesando imagen');
+      imagenURL = await withTimeout(fileToBase64(pendingImageFile), 10000, 'codificar imagen');
+    }
+    setProgress(70, 'Guardando');
+    await withTimeout(addDoc(collFor(currentModel), {
+      contramarca: document.getElementById('f_contramarca').value,
+      fase: document.getElementById('f_fase').value,
+      fechaInicio: document.getElementById('f_fecha').value,
+      zona: document.getElementById('f_zona').value,
+      defecto,
+      descripcion: document.getElementById('f_descripcion').value,
+      owner: document.getElementById('f_owner').value,
+      imagenURL,
+      recurrente: document.getElementById('f_recurrente').checked,
+      nuevo: document.getElementById('f_nuevo').checked,
+      accionTomada: document.getElementById('f_accion').value,
+      responsable: document.getElementById('f_responsable').value,
+      fechaPrevOK: document.getElementById('f_fechaprev').value,
+      status: document.getElementById('f_status').value,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    }), 15000, 'guardar en Firestore');
+    setProgress(100, 'Listo');
+    msg.className='msg ok'; msg.textContent='Defecto guardado. Ya aparece en el registro.';
+    setTimeout(() => { openLista(); }, 900);
+  } catch(err){
+    msg.className='msg err'; msg.textContent = '⚠️ ' + err.message;
+    document.getElementById('progBar').style.display = 'none';
+  } finally {
+    btn.disabled = false;
+  }
+};
+
+// ---------- ESTADISTICAS ----------
+window.openEstadisticas = async function(){
+  showScreen('estadisticas');
+  document.getElementById('statsContainer').innerHTML = '<p class="empty">Cargando...</p>';
+  const q = query(collFor(currentModel), orderBy('createdAt','desc'));
+  const snap = await getDocs(q);
+  const list = [];
+  snap.forEach(d => list.push({ id:d.id, ...d.data() }));
+  renderStats(list);
+};
+
+function barRows(counts){
+  const max = Math.max(1, ...Object.values(counts));
+  return Object.entries(counts).sort((a,b) => b[1]-a[1]).map(([k,v]) => `
+    <div class="bar-row">
+      <div class="bar-lbl"><span>${k}</span><span>${v}</span></div>
+      <div class="bar-track"><div class="bar-fill" style="width:${Math.round(v/max*100)}%"></div></div>
+    </div>
+  `).join('');
+}
+
+function renderStats(list){
+  const total = list.length;
+  const byStatus = { Abierto:0, 'En proceso':0, Cerrado:0 };
+  list.forEach(d => { if(byStatus[d.status] !== undefined) byStatus[d.status]++; });
+  const byZona = {}; list.forEach(d => { const z = d.zona || '(sin zona)'; byZona[z] = (byZona[z]||0)+1; });
+  const byOwner = {}; list.forEach(d => { const o = d.owner || '(sin owner)'; byOwner[o] = (byOwner[o]||0)+1; });
+  const conAccion = list.filter(d => d.accionTomada && d.accionTomada.trim()).length;
+  const recurrentes = list.filter(d => d.recurrente).length;
+
+  document.getElementById('statsContainer').innerHTML = `
+    <div class="stat-block">
+      <h3>Resumen ${currentModel}</h3>
+      <div class="stat-nums">
+        <div class="counter"><div class="num">${total}</div><div class="lbl">Total</div></div>
+        <div class="counter abierto"><div class="num">${byStatus['Abierto']}</div><div class="lbl">Abierto</div></div>
+        <div class="counter cerrado"><div class="num">${byStatus['Cerrado']}</div><div class="lbl">Cerrado</div></div>
+      </div>
+    </div>
+    <div class="stat-block">
+      <h3>Por zona</h3>
+      ${total ? barRows(byZona) : '<p class="empty">Sin datos</p>'}
+    </div>
+    <div class="stat-block">
+      <h3>Por responsable (owner)</h3>
+      ${total ? barRows(byOwner) : '<p class="empty">Sin datos</p>'}
+    </div>
+    <div class="stat-block">
+      <h3>Otros</h3>
+      <div class="bar-row"><div class="bar-lbl"><span>Con acción tomada registrada</span><span>${conAccion} / ${total}</span></div></div>
+      <div class="bar-row"><div class="bar-lbl"><span>Recurrentes</span><span>${recurrentes} / ${total}</span></div></div>
+    </div>
+  `;
+}
+
+// ---------- IMPRIMIR ----------
+window.openPrintModal = function(){
+  document.getElementById('printField').value = 'Todos';
+  document.getElementById('printValueWrap').style.display = 'none';
+  document.getElementById('printModal').classList.add('active');
+};
+window.closePrintModal = function(){ document.getElementById('printModal').classList.remove('active'); };
+
+window.populatePrintValues = function(){
+  const field = document.getElementById('printField').value;
+  const wrap = document.getElementById('printValueWrap');
+  const sel = document.getElementById('printValue');
+  if(field === 'Todos'){ wrap.style.display = 'none'; return; }
+  const values = [...new Set(defects.map(d => d[field]).filter(Boolean))];
+  sel.innerHTML = values.map(v => `<option value="${v}">${v}</option>`).join('');
+  wrap.style.display = 'block';
+};
+
+function printCardHTML(d){
+  return `
+    <div class="print-card">
+      <h4>${d.defecto || '(sin tipo)'} — ${d.status}</h4>
+      <table>
+        <tr><td><b>Contramarca</b></td><td>${d.contramarca||''}</td><td><b>Fase</b></td><td>${d.fase||''}</td></tr>
+        <tr><td><b>Fecha</b></td><td>${d.fechaInicio||''}</td><td><b>Zona</b></td><td>${d.zona||''}</td></tr>
+        <tr><td><b>Owner</b></td><td>${d.owner||''}</td><td><b>Responsable</b></td><td>${d.responsable||''}</td></tr>
+        <tr><td><b>Descripción</b></td><td colspan="3">${d.descripcion||''}</td></tr>
+        <tr><td><b>Acción tomada</b></td><td colspan="3">${d.accionTomada||''}</td></tr>
+        <tr><td><b>Fecha prev. OK</b></td><td>${d.fechaPrevOK||''}</td><td><b>Recurrente</b></td><td>${d.recurrente?'Sí':'No'}</td></tr>
+      </table>
+      ${d.imagenURL ? `<img src="${d.imagenURL}">` : ''}
+      ${Array.isArray(d.imagenesAccion) && d.imagenesAccion.length ? d.imagenesAccion.map(src => `<img src="${src}">`).join('') : ''}
+    </div>
+  `;
+}
+
+window.printSingleDefect = function(id){
+  const d = defects.find(x => x.id === id);
+  if(!d) return;
+  document.getElementById('printArea').innerHTML = `
+    <h2>Ficha de defecto — ${currentModel}</h2>
+    <p>${new Date().toLocaleDateString('es-ES')}</p>
+    ${printCardHTML(d)}
+  `;
+  setTimeout(() => window.print(), 200);
+};
+
+window.generatePrint = function(){
+  const field = document.getElementById('printField').value;
+  const value = document.getElementById('printValue') ? document.getElementById('printValue').value : null;
+  const filtered = field === 'Todos' ? defects : defects.filter(d => d[field] === value);
+
+  if(filtered.length === 0){ alert('No hay defectos que coincidan con ese filtro.'); return; }
+
+  document.getElementById('printArea').innerHTML = `
+    <h2>Registro de defectos geométricos — ${currentModel}</h2>
+    <p>${field === 'Todos' ? 'Todos los defectos' : field + ': ' + value} · ${filtered.length} defecto(s) · ${new Date().toLocaleDateString('es-ES')}</p>
+    ${filtered.map(printCardHTML).join('')}
+  `;
+  closePrintModal();
+  setTimeout(() => window.print(), 200);
+};
+</script>
+</body>
+</html>
